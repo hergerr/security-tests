@@ -1,9 +1,25 @@
 from django.shortcuts import render
-from django.http import HttpResponse
-from .forms import FileForm
+from .forms import DocumentForm
+from .models import Document
 
-
+# executing uploaded file does not work
 def index(request):
-    form = FileForm()
-    string = "<script>alert('dzien dobry')</script>"
-    return render(request, 'injection.html', {'form': form, 'string': string})
+    if request.method == 'POST':
+        form = DocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            newdoc = Document(docfile=request.FILES['docfile'])
+            newdoc.save()
+
+            return render(request, 'injection.html')
+    else:
+        form = DocumentForm()  # A empty, unbound form
+
+    # Load documents for the list page
+    documents = Document.objects.all()
+
+    # Render list page with the documents and the form
+    return render(
+        request,
+        'injection.html',
+        {'documents': documents, 'form': form},
+    )
